@@ -1,0 +1,54 @@
+---
+#
+# Assumes the use of AWS region and authentication environment variables
+#
+
+project_name: nginx_static_www        # tag all VPCs and resources
+provider: AWS                         # infrastructure provider hint
+domain_name: trust0.net               # use 'aws.local' if you don't have one
+
+
+ssh_keypair_directory: ~/.ssh
+ssh_keypair_name: "{{ project_name }}"
+ssh_keypair_private_file: "{{ ssh_keypair_directory }}/{{ ssh_keypair_name }}.private.pem"
+
+
+#
+# AWS VPC Settings
+#
+aws:
+  region: "{{ lookup('env','AWS_REGION') | default('us-west-1') }}"
+  public_access_cidr:  0.0.0.0/0
+  vpc:
+    name: "{{ project_name }}"
+    cidr: 172.31.0.0/16
+    public_subnet_cidr:  172.31.1.0/24
+    private_subnet_cidr: 172.31.2.0/24
+
+
+#
+# Images: https://console.aws.amazon.com/ec2/v2/home#AMICatalog:
+#   image_id: ami-04b6c97b14c54de18  # us-west-1 Amazon Linux 2 AMI (HVM)
+#   image_id: ami-039da1612f6f41296  # us-west-1 Ubuntu Server 20.04 LTS 64-bit (Arm)
+#   image_id: ami-054965c6cd7c6e462  # us-west-1 RHEL 8 64-bit (x86)
+#   image_id: ami-05f88a4bcb91f4ea7  # us-west-1 RHEL 8 64-bit (Arm)
+#
+# Instance Types: https://console.aws.amazon.com/ec2/v2/home#InstanceTypes:
+#
+servers:
+- name: www     # must be DNS-friendly
+  image_id: ami-01f87c43e618bf8f0 # us-west-1 Ubuntu Server 20.04 LTS 64-bit (x86)
+  instance_type: t2.micro         # 1 vCPU | x86_64 | 1GB RAM
+  # private_ip: 172.31.2.5
+  security_group: sg_ping_ssh_www_only
+  ssh_user: ubuntu
+  ssh_keypair_name: "{{ ssh_keypair_name }}"
+  volume_size : 10    # GB
+  tags: 
+    project: "{{ project_name }}"
+    application: www
+    product: nginx
+    start_date: "{{ ansible_date_time.date }}"
+
+
+...

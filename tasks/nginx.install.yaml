@@ -1,0 +1,44 @@
+---
+#
+# See http://nginx.org/en/linux_packages.html for details
+#
+
+
+  - name: Install nginx
+    become: yes
+    ansible.builtin.apt:
+      state: latest     # absent | build-dep | latest | present | fixed
+      pkg:
+      - nginx
+      update_cache: yes
+      autoremove: yes
+      autoclean: yes
+      cache_valid_time: 86400   # 1 day
+
+  - name: Copy the nginx config
+    become: yes
+    ansible.builtin.copy:
+      src: ./files/nginx.cfg
+      dest: /etc/nginx/sites-enabled/nginx.cfg
+
+  - name: Create symlink
+    become: yes
+    ansible.builtin.file:
+      src: /etc/nginx/sites-enabled/nginx.cfg
+      dest: /etc/nginx/sites-enabled/default
+      state: link
+
+  - name: Copy the content of the web site
+    become: yes
+    ansible.builtin.copy:
+      src: ./files/static_site/
+      dest: /opt/static_site
+
+  - name: Start nginx
+    become: yes
+    ansible.builtin.service:
+      name: nginx
+      state: started
+
+
+...

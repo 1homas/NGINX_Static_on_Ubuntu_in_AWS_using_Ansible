@@ -1,0 +1,66 @@
+---
+#------------------------------------------------------------------------------
+# Main YAML Playbook to create an Ansible Control Node in AWS
+#------------------------------------------------------------------------------
+
+#
+# Create the AWS VPC and Linux Instance 
+#
+- name: Create an Ansible Control Node in AWS
+  hosts: localhost
+  gather_facts: yes   # required for `ansible_date_time`
+  vars_files:
+    vars.yaml
+  tasks:
+
+
+  - name: Create VPC
+    ansible.builtin.include_tasks: tasks/aws.vpc.yaml
+
+  - name: Create SSH KeyPair
+    ansible.builtin.include_tasks: tasks/aws.ssh_key_pair.yaml
+
+  - name: Create Security Group
+    ansible.builtin.include_tasks: tasks/aws.security_groups.yml
+
+  - name: Create Ubuntu Server(s)
+    loop: "{{ servers }}"
+    ansible.builtin.include_tasks: tasks/aws.ubuntu.yaml
+
+
+#
+# Start a new playbook with target hosts in AWS, not the localhost
+#
+
+- name: Install nginx
+  hosts: www          # use with the *aws_ec2.yaml inventory plugin
+  gather_facts: yes   # required for `ansible_date_time`
+  vars_files:
+    vars.yaml
+  vars:
+    ansible_ssh_user: ubuntu
+    ansible_ssh_private_key_file: "{{ ssh_keypair_private_file }}"
+    # ansible_ssh_pass=password
+    # ansible_connection=ssh
+  tasks:
+
+  - name: Ping Node
+    ansible.builtin.include_tasks: tasks/ping.yaml
+
+  - name: SSH Node
+    ansible.builtin.include_tasks: tasks/ssh.show.yaml
+
+  - ansible.builtin.debug: var=hostvars[inventory_hostname]
+
+  - name: DNS Registration for Node(s)
+    loop: "{{ servers }}"
+    ansible.builtin.include_tasks: tasks/aws.dns_registration.yaml
+
+  - name: Ubuntu Update & Upgrade
+    ansible.builtin.include_tasks: tasks/apt.update_upgrade.yaml
+
+  - name: nginx Installation
+    ansible.builtin.include_tasks: tasks/nginx.install.yaml
+
+
+...

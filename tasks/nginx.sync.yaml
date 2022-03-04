@@ -1,0 +1,18 @@
+---
+#
+#
+#
+
+  # - name: Sync nginx site contents
+  #   become: yes
+  #   ansible.builtin.copy:
+  #     src: ./files/static_site/
+  #     dest: /opt/static_site
+
+  - name: Sync nginx site contents
+    delegate_to: localhost
+    ansible.posix.synchronize:
+      src: ./files/static_site     # relative path; no trailing /
+      dest: /opt/static_site       # absolute path; no trailing /
+
+...

@@ -1,0 +1,15 @@
+---
+
+
+  # 
+  # Equivalent of `sudo apt update && sudo apt -Y upgrade`
+  #
+  - name: apt Update and Upgrade Packages
+    become: yes
+    ansible.builtin.apt:
+      update_cache: yes
+      upgrade: yes
+      cache_valid_time: 86400   # 1 day
+
+
+...

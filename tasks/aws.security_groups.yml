@@ -1,0 +1,46 @@
+---
+#
+# Create AWS Security Group for Ping and SSH
+#
+
+  - name: Create Security Group sg_ping_ssh
+    amazon.aws.ec2_group:
+      name: sg_ping_ssh_www_only
+      description: Allow Ping and SSH to Linux VM
+      vpc_id: "{{ vpc.vpc.id }}"
+      region: "{{ aws.region }}"
+      rules:
+        - proto: icmp
+          from_port: -1
+          to_port:  -1
+          cidr_ip: "{{ aws.public_access_cidr}}"    # any
+          rule_desc: Allow ICMP Ping
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: "{{ aws.public_access_cidr}}"    # any
+          rule_desc: Allow SSH
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: "{{ aws.public_access_cidr}}"    # any
+          rule_desc: Allow HTTP
+        - proto: tcp
+          from_port: 443
+          to_port: 443
+          cidr_ip: "{{ aws.public_access_cidr}}"    # any
+          rule_desc: Allow HTTPS
+      rules_egress:
+        - proto: all
+          cidr_ip: 0.0.0.0/0    # any
+      tags:
+        Name: sg_ping_ssh_www_only
+        project: "{{ project_name }}"
+        start_date: "{{ ansible_date_time.date }}"
+    register: sg_ping_ssh_www_only
+
+  # - name: Show sg_ping_ssh_www_only
+  #   ansible.builtin.debug: var=sg_ping_ssh_www_only
+
+
+...
