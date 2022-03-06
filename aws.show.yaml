@@ -109,7 +109,7 @@
     amazon.aws.ec2_vpc_net_info:
       # name: "{{ aws_vpc_name }}"
       # cidr_block:  "{{ aws_vpc_cidr }}"
-      # region: "{{ aws_region }}"
+      # region: "{{ aws.region }}"
     register: vpcs
     tags:
     - vpc
@@ -129,7 +129,7 @@
 
   - name: Query AWS EC2 Instances
     community.aws.ec2_instance_info:
-      region: "{{ aws_region }}"
+      region: "{{ aws.region }}"
       filters:
         "tag:project": "{{ project_name }}"
         instance-state-name: running
@@ -173,7 +173,7 @@
   #   amazon.aws.ec2_group_info:
   #     # filters:
   #       # vpc_id: "{{ vpcs.vpcs.id }}"
-  #       # region: "{{ aws_region }}"
+  #       # region: "{{ aws.region }}"
   #   register: security_groups
   #   tags:
   #   - sg
@@ -183,7 +183,7 @@
     amazon.aws.ec2_group_info:
       # filters:
         # vpc_id: "{{ vpcs.vpcs.id }}"
-        # region: "{{ aws_region }}"
+        # region: "{{ aws.region }}"
     register: sgs
     tags:
     - sg
@@ -308,7 +308,7 @@
   #
   - name: Get All Volumes
     amazon.aws.ec2_vol_info:
-      region: "{{ aws_region }}"
+      region: "{{ aws.region }}"
     register: result
     tags:
     - volume
@@ -321,11 +321,11 @@
     - volumes
 
   #
-  # Show dhcp options sets in AWS
+  # Show DHCP options in AWS
   #
   - name: Get All ec2_vpc_dhcp_option_info
     amazon.aws.ec2_vpc_dhcp_option_info:
-      region: "{{ aws_region }}"
+      region: "{{ aws.region }}"
     register: result
     tags:
     - vpc
@@ -342,7 +342,7 @@
   #
   - name: Get All ec2_vpc_net_info
     amazon.aws.ec2_vpc_net_info:
-      region: "{{ aws_region }}"
+      region: "{{ aws.region }}"
     register: result
     tags:
     - vpc
@@ -362,7 +362,7 @@
   #
   - name: Get All ec2_vpc_subnet_info
     amazon.aws.ec2_vpc_subnet_info:
-      region: "{{ aws_region }}"
+      region: "{{ aws.region }}"
     register: result
     tags:
     - subnet
@@ -374,22 +374,60 @@
     - subnet
     - vpc
 
-  # #
-  # # s3_buckets
-  # #
-  # - name: Get All s3_bucket
-  #   amazon.aws.s3_bucket:
-  #     region: "{{ aws_region }}"
-  #   register: result
-  #   tags:
-  #   - s3
-  #   - bucket
 
-  # - name: result
-  #   ansible.builtin.debug: var=result
-  #   tags:
-  #   - s3
-  #   - bucket
+  #
+  # Show Route53/DNS Hosted Zones
+  #
+  - name: List all hosted zones
+    community.aws.route53_info:
+      query: hosted_zone
+    register: hosted_zones
+    tags: dns,hosted_zones,route53,zones
+
+  - ansible.builtin.debug: var=hosted_zones
+    tags: dns,hosted_zones,route53,zones
+
+  - name: Return a count of all hosted zones
+    community.aws.route53_info:
+      query: hosted_zone
+      hosted_zone_method: count
+    register: hosted_zone_count
+    tags: dns,hosted_zones,route53,zones
+
+  - ansible.builtin.debug: var=hosted_zone_count
+    tags: dns,hosted_zones,route53,zones
+
+  - name: List hosted zone record sets
+    loop: "{{ hosted_zones.HostedZones }}"
+    community.aws.route53_info:
+      query: record_sets
+      hosted_zone_id: "{{ item.Id }}"
+      # profile: account_name
+      # max_items: 20
+    register: record_sets
+    tags: dns,hosted_zones,route53,zones
+
+  - ansible.builtin.debug: var=record_sets
+    tags: dns,hosted_zones,route53,zones
+
+  - name: Show Hosted Zone Record Sets
+    loop: "{{ record_sets.results }}"
+    ansible.builtin.debug: var=item
+    tags: dns,hosted_zones,route53,zones
+
+  #
+  # Show S3 Buckets
+  #
+  - name: Get all S3 Buckets
+    community.aws.aws_s3_bucket_info:
+    register: result
+    tags: s3, bucket
+
+  - name: List buckets
+    ansible.builtin.debug:
+      msg: "{{ result['buckets'] }}"
+    tags: s3, bucket
+
 
 
 ...
