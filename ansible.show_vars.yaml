@@ -1,0 +1,18 @@
+---
+#------------------------------------------------------------------------------
+# Show Ansible Playbook Variables
+#------------------------------------------------------------------------------
+
+- name: Show Ansible Playbook Variables
+  hosts: localhost
+  gather_facts: no
+  vars_files: vars.yaml
+  tasks:
+
+  - ansible.builtin.debug: var=inventory_hostname
+  # - ansible.builtin.debug: var=hostvars
+  - ansible.builtin.debug: var=group_names
+  - ansible.builtin.debug: var=groups
+  - ansible.builtin.debug: var=play_hosts
+  - ansible.builtin.debug: var=groups.ec2_instances
+  - ansible.builtin.debug: var=groups.all
