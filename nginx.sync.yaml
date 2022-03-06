@@ -6,26 +6,33 @@
 - name: Sync nginx site files
   hosts: www          # use with the *aws_ec2.yaml inventory plugin
   gather_facts: yes   # required for `ansible_date_time`
-  vars_files:
-    vars.yaml
+  vars_files:   vars.yaml
   vars:
     ansible_ssh_user: ubuntu
     ansible_ssh_private_key_file: "{{ ssh_keypair_private_file }}"
     # ansible_ssh_pass=password
   tasks:
 
-  # - name: Sync nginx site contents
-  #   become: yes
-  #   ansible.builtin.copy:
-  #     src: ./files/static_site/
-  #     dest: /opt/static_site
 
-  - name: Sync nginx site contents
-    delegate_to: localhost
+  - name: Copy nginx site contents
     become: yes
-    ansible.posix.synchronize:
-      src: ./files/static_site     # relative path; no trailing /
-      dest: /opt                   # absolute path; no trailing /
+    ansible.builtin.copy:
+      src: ./files/static_site/
+      dest: /opt/static_site
+
+
+  - name: Copy the nginx config
+    become: yes
+    ansible.builtin.copy:
+      src: ./files/nginx.cfg
+      dest: /etc/nginx/sites-enabled/nginx.cfg
+
+
+  - name: Restart nginx
+    become: yes
+    ansible.builtin.service:
+      name: nginx
+      state: restarted
 
 
 ...
