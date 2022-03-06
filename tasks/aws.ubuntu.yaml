@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 
 
-  - name: Create Nodes
+  - name: Create Ubuntu Server
     community.aws.ec2_instance:
       state: started        # 💡 wait for started to get public IP address!
       name: "{{ item.name }}"
