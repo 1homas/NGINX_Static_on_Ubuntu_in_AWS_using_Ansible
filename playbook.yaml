@@ -1,6 +1,6 @@
 ---
 #------------------------------------------------------------------------------
-# Main YAML Playbook to create an Ansible Control Node in AWS
+# Ansible Playbook to Create Ubuntu Server with NGINX Web Server in AWS
 #------------------------------------------------------------------------------
 
 #
@@ -27,11 +27,12 @@
     loop: "{{ servers }}"
     ansible.builtin.include_tasks: tasks/aws.ubuntu.yaml
 
+  - name: Refresh AWS Inventory to get the new Instance(s)
+    ansible.builtin.meta: refresh_inventory
 
 #
-# Start a new playbook with target hosts in AWS, not the localhost
+# New play with refreshed hosts in AWS
 #
-
 - name: Install nginx
   hosts: www          # use with the *aws_ec2.yaml inventory plugin
   gather_facts: yes   # required for `ansible_date_time`
@@ -40,7 +41,6 @@
   vars:
     ansible_ssh_user: ubuntu
     ansible_ssh_private_key_file: "{{ ssh_keypair_private_file }}"
-    # ansible_ssh_pass=password
     # ansible_connection=ssh
   tasks:
 
@@ -54,7 +54,7 @@
 
   - name: DNS Registration for Node(s)
     loop: "{{ servers }}"
-    ansible.builtin.include_tasks: tasks/aws.dns_registration.yaml
+    ansible.builtin.include_tasks: tasks/aws.dns_records.add.yaml
 
   - name: Ubuntu Update & Upgrade
     ansible.builtin.include_tasks: tasks/apt.update_upgrade.yaml
